@@ -4,6 +4,8 @@ Code used in the development, training and validation, of Sturgeon.
 
 For more information please check our [preprint](https://www.medrxiv.org/content/10.1101/2023.01.25.23284813v1).
 
+If you just want to predict using our models then please refer to the following repository: https://github.com/marcpaga/sturgeon
+
 ## Installation
 
 Requires python 3.7 and a linux system.
