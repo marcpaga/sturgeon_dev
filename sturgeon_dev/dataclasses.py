@@ -423,67 +423,6 @@ class MicroarrayDatasetFromOnlineSims(MicroarrayDataset):
         self.samplers[sampler].resample()
 
 
-class TargetedMicroarrayDatasetFromOnlineSims(MicroarrayDatasetFromOnlineSims):
-
-    def __init__(self, *args, **kwargs):
-        super(TargetedMicroarrayDatasetFromOnlineSims, self).__init__(*args, *kwargs)
-
-        self.current_seeds = (None, None)
-        self.data_subset = None
-        self.test_seeds = None
-
-        if self.test_mode:
-            self.test_seeds = self.samplers['test'].test_seeds
-
-    def __len__(self):
-        raise NotImplementedError
-
-    def __getitem__(self, idx):
-
-        return {
-            'x': self.data_subset['x'][idx], 
-            'y': self.data['y'][idx],
-            'diagnostics': self.data['diagnostics'][idx],
-            'idx': np.array([idx]),
-            'timepoint': np.array(self.current_seeds[1]),
-            'seed_pregen': np.array(self.current_seeds[2]),
-            'X':  self.data['x'][idx], 
-        }
-
-    def subset_dataset(self, timepoint, seed):
-        
-        self.current_seeds = (timepoint, seed)
-        self.data_subset = self.apply_run_to_batch(
-            deepcopy(self.data['x']), 
-            self.reads_per_time_bin[timepoint], 
-            seed
-        )
-
-    def _prepare_samplers(self):
-
-        self.samplers = dict()
-        if self.test_mode:
-            cv_sets = ['train', 'test']
-        else:
-            cv_sets = ['train']
-
-        for cvset in cv_sets:
-
-            if cvset == 'train':
-                num_epochs = self.num_epochs
-            else:
-                num_epochs = 1
-            
-            self.samplers[cvset] = TargetedSimSampler(
-                data_source = self,
-                idxs = self.idxs[cvset], 
-                min_time = self.min_time, 
-                max_time = self.max_time, 
-                seed = self.starting_seed, 
-                seed_range = self.seed_ranges[cvset], 
-                num_epochs = num_epochs,
-                test_mode = self.test_mode
-            )
     
 class SimSampler(Sampler):
 

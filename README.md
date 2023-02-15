@@ -19,6 +19,9 @@ pip3 install -r requirements.txt
 ## Contents
 
 `sturgeon_dev`: contains the source code, mostly functions and classes.
+
 `scripts`: contains custom scripts for the processing of the data.
+
 `static`: contains small definitions, such as the CNS classification system, the location of the microarray probes and the plotting colors of each CNS class.
+
 `workflows`: contains snakemake workflows to run the training/validation pipelines.
