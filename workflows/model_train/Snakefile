@@ -1,0 +1,1038 @@
+# To run: 
+# snakemake --profile slurm --resources cpu_jobs=1 gpu_jobs=4 --latency-wait 300 -n
+# remove -n otherwise it is a dry run
+# suggested to use the --until and specify the rule to do
+# train
+# evaluate
+# calibrate
+# plot_performance
+
+import os
+from snakemake.utils import min_version
+import yaml
+min_version('6.13.1')
+
+#configfile:'../config.yaml'
+
+MODEL_NUM = list(range(config['num_models']))[:config['num_models_run']]
+ROBUSTNESS_SAMPLES = os.listdir(os.path.join(config['data_dir_pmc'], 'robustness'))
+PSEUDOTIME_SAMPLES = os.listdir(os.path.join(config['data_dir_pmc'], 'pseudotime'))
+MEGALODON_PSEUDOTIME_SAMPLES = list()
+for d in os.listdir(os.path.join(config['data_dir'], 'brainstem_promethion', 'pseudotime')):
+    for dd in os.listdir(os.path.join(config['data_dir'], 'brainstem_promethion', 'pseudotime', d)):
+        MEGALODON_PSEUDOTIME_SAMPLES.append(os.path.join(d, dd))
+
+MEGALODON_ROBUSTNESS_SAMPLES = list()
+for d in os.listdir(os.path.join(config['data_dir'], 'brainstem_promethion', 'robustness')):
+    for dd in os.listdir(os.path.join(config['data_dir'], 'brainstem_promethion', 'robustness', d)):
+        MEGALODON_ROBUSTNESS_SAMPLES.append(os.path.join(d, dd))
+
+SCRIPTS_DIR = config['scripts_dir']
+ENV_DIR = config['env_dir']
+
+main_dir = os.path.join(config['model_dir'], config['model_name'])
+if not os.path.exists(main_dir):
+    os.makedirs(main_dir)
+with open(os.path.join(main_dir, 'config.yaml'), 'w') as outfile:
+    yaml.dump(config, outfile, default_flow_style=False)
+
+rule all:
+    input:
+        # expand(
+        #     os.path.join(
+        #         config['model_dir'],
+        #         config['model_name'],
+        #         '{prediction_type}',
+        #         '{model_num}',
+        #         'plots',
+        #         'plots.done',
+        #     ),
+        #     prediction_type = config['prediction_type'],
+        #     model_num = MODEL_NUM,
+        # ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'maxima_arrays_eval.csv'
+            ),
+            prediction_type = config['prediction_type'],
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'ensemble',
+                'model.zip',
+            ),
+            prediction_type = config['prediction_type'],
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'ensemble',
+                'weight_scores.npz'
+            ),
+            prediction_type = config['prediction_type'],
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'megalodon_predictions_pseudotime',
+                '{megalodon_sample_pse}',
+                'prediction.done',
+            ),
+            prediction_type = config['prediction_type'],
+            megalodon_sample_pse = MEGALODON_PSEUDOTIME_SAMPLES,
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'megalodon_predictions_robustness',
+                '{megalodon_sample_rob}',
+                'prediction.done',
+            ),
+            prediction_type = config['prediction_type'],
+            megalodon_sample_rob = MEGALODON_ROBUSTNESS_SAMPLES,
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'maxima_predictions_robustness',
+                '{maxima_sample}',
+                'prediction.done',
+            ),
+            prediction_type = config['prediction_type'],
+            maxima_sample = ROBUSTNESS_SAMPLES,
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'maxima_predictions_pseudotime',
+                '{maxima_sample_pse}',
+                'prediction.done',
+            ),
+            prediction_type = config['prediction_type'],
+            maxima_sample_pse = PSEUDOTIME_SAMPLES,
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'maxima_predictions',
+                'prediction.done',
+            ),
+            prediction_type = config['prediction_type'],
+        ),
+        expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'oslo_predictions',
+                'prediction.done',
+            ),
+            prediction_type = config['prediction_type'],
+        ),
+        expand(os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                '{model_num}',
+                'temperature_calibration.done'
+            ), 
+            prediction_type = config['prediction_type'],
+            model_num = MODEL_NUM
+        ),
+        expand(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'maxima_eval.done'
+            ),
+            prediction_type = config['prediction_type'],
+            model_num = MODEL_NUM
+        ),
+        expand(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'eval.done'
+        ), 
+        prediction_type = config['prediction_type'],
+        model_num = MODEL_NUM),
+
+
+rule predict_oslo:
+    input:
+        model = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        )
+    output:
+        touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'oslo_predictions',
+            'prediction.done'
+        )),
+    params:
+        input_dir = os.path.join(config['data_dir_oslo'], 'bed'),
+        output_dir = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'oslo_predictions',
+        ),
+    resources:
+        job_name = 'predict_oslo',
+        time = '00:30:00',
+        mem_mb = '32G',
+        cpus = 1,
+        partition = 'gpu',
+        gpus = '1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/predict_batch_onnx.py '\
+        ' --model-file {input.model} '\
+        ' --input-dir {params.input_dir} '\
+        ' --output-dir {params.output_dir}; '
+
+rule predict_megalodon_robustness:
+    input:
+        model = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        ),
+        robustness_done = os.path.join(
+            config['data_dir'],
+            'brainstem_promethion',
+            'robustness',
+            '{megalodon_sample_rob}',
+            'pseudotime.done'
+        )
+    output:
+        touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'megalodon_predictions_robustness',
+            '{megalodon_sample_rob}',
+            'prediction.done'
+        )),
+    params:
+        input_dir = lambda wildcards: os.path.join(
+            config['data_dir'],
+            'brainstem_promethion',
+            'robustness',
+            wildcards.megalodon_sample_rob,
+        ),
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'megalodon_predictions_robustness',
+            wildcards.megalodon_sample_rob,
+        ),
+    resources:
+        job_name = 'predict_megalodon_robustness',
+        time = '06:00:00',
+        mem_mb = '32G',
+        cpus = 1,
+        partition = 'cpu',
+        gpus = '',
+        gpu_jobs = 0
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/predict_batch_onnx.py '\
+        ' --model-file {input.model} '\
+        ' --input-dir {params.input_dir} '\
+        ' --output-dir {params.output_dir}; '
+
+rule predict_megalodon_pseudotime:
+    input:
+        model = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        )
+    output:
+        touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'megalodon_predictions_pseudotime',
+            '{megalodon_sample_pse}',
+            'prediction.done'
+        )),
+    params:
+        input_dir = lambda wildcards: os.path.join(
+            config['data_dir'],
+            'brainstem_promethion',
+            'pseudotime',
+            wildcards.megalodon_sample_pse,
+        ),
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'megalodon_predictions_pseudotime',
+            wildcards.megalodon_sample_pse,
+        ),
+    resources:
+        job_name = 'predict_megalodon_pseudotime',
+        time = '00:30:00',
+        mem_mb = '32G',
+        cpus = 1,
+        partition = 'cpu',
+        gpus = '',
+        gpu_jobs = 0
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/predict_batch_onnx.py '\
+        ' --model-file {input.model} '\
+        ' --input-dir {params.input_dir} '\
+        ' --output-dir {params.output_dir}; '
+
+rule predict_maxima_robustness:
+    input:
+        model = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        )
+    output:
+        touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'maxima_predictions_robustness',
+            '{maxima_sample}',
+            'prediction.done'
+        )),
+    params:
+        input_dir = lambda wildcards: os.path.join(
+            config['data_dir_pmc'],
+            'robustness',
+            wildcards.maxima_sample,
+        ),
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'maxima_predictions_robustness',
+            wildcards.maxima_sample
+        ),
+    resources:
+        job_name = 'predict_maxima',
+        time = '01:00:00',
+        mem_mb = '32G',
+        cpus = 1,
+        partition = 'cpu',
+        gpus = '',
+        gpu_jobs = 0
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/predict_batch_onnx.py '\
+        ' --model-file {input.model} '\
+        ' --input-dir {params.input_dir} '\
+        ' --output-dir {params.output_dir}; '
+
+rule predict_maxima_pseudotime:
+    input:
+        model = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        )
+    output:
+        touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'maxima_predictions_pseudotime',
+            '{maxima_sample_pse}',
+            'prediction.done'
+        )),
+    params:
+        input_dir = lambda wildcards: os.path.join(
+            config['data_dir_pmc'],
+            'pseudotime',
+            wildcards.maxima_sample_pse,
+        ),
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'maxima_predictions_pseudotime',
+            wildcards.maxima_sample_pse,
+        ),
+    resources:
+        job_name = 'predict_maxima_pseudotime',
+        time = '00:30:00',
+        mem_mb = '32G',
+        cpus = 1,
+        partition = 'cpu',
+        gpus = '',
+        gpu_jobs = 0
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/predict_batch_onnx.py '\
+        ' --model-file {input.model} '\
+        ' --input-dir {params.input_dir} '\
+        ' --output-dir {params.output_dir}; '
+
+rule predict_maxima:
+    input:
+        model = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        )
+    output:
+        touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'maxima_predictions',
+            'prediction.done'
+        )),
+    params:
+        input_dir = config['data_dir_pmc'],
+        output_dir = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'maxima_predictions',
+        ),
+    resources:
+        job_name = 'predict_maxima',
+        time = '00:30:00',
+        mem_mb = '32G',
+        cpus = 1,
+        partition = 'gpu',
+        gpus = '1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/predict_batch_onnx.py '\
+        ' --model-file {input.model} '\
+        ' --input-dir {params.input_dir} '\
+        ' --output-dir {params.output_dir}; '
+
+
+    
+rule evaluate_maxima_arrays_join:
+    input:
+        evaluation_test = expand(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'maxima_performance.csv'
+            ), prediction_type = config['prediction_type'], model_num = MODEL_NUM,
+        ), 
+        model_file = ancient(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        )),
+    output:
+        out_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'maxima_arrays_eval.csv'
+        ),
+    params:
+        model_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+        ),
+        data_file = os.path.join(
+            config['data_dir_pmc'],
+            'maxima_arrays.npz',
+        )
+
+    resources:
+        job_name = 'join',
+        time = '02:00:00',
+        mem_mb = '32G',
+        cpus = 1,
+        partition = 'cpu',
+        gpus = '',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' python3 -W ignore {SCRIPTS_DIR}/evaluate_maxima_join.py '\
+        ' --data-file {params.data_file} '\
+        ' --model-dir {params.model_dir} '\
+        ' --model-file {input.model_file} '\
+        ' --output-file {output.out_file}; '
+
+
+rule export_model:
+    input:
+        chk_files = expand(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'checkpoints',
+            'checkpoint_best.pt'
+        ), model_num = MODEL_NUM, prediction_type = config['prediction_type']),
+        temperature_files = expand(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'calibrated_temperature.npy'
+        ), model_num = MODEL_NUM, prediction_type = config['prediction_type']),
+        weight_files = expand(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'weight_scores.npz'
+        ), prediction_type = config['prediction_type']),
+    
+    output:
+        os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'model.zip'
+        ),
+    params:
+        model_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+        ),
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'ensemble',
+        ),
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+    resources:
+        job_name = 'ensemble',
+        time = '00:30:00',
+        mem_mb = '64G',
+        cpus = 1,
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/model_ensemble.py '\
+        ' --model-dir {params.model_dir} '\
+        ' --prediction-type {params.prediction_type} '\
+        ' --output-dir {params.output_dir}; '
+    
+rule weight_models:
+    input:
+        evaluation_test = expand(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'test_performance.csv'
+        ), model_num = MODEL_NUM, prediction_type = config['prediction_type'])
+    output:
+        weight_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'ensemble',
+            'weight_scores.npz'
+        ),
+    params:
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'ensemble',
+        ),
+        model_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+        ),
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+        num_models = config['num_models']
+
+    resources:
+        job_name = 'weight_scores',
+        time = '02:00:00',
+        mem_mb = '64G',
+        cpus = config['processes'],
+        partition = 'cpu',
+        gpus = '',
+        gpu_jobs = 0
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/model_weight_scores.py '\
+        ' --model-dir {params.model_dir} '\
+        ' --num-models {params.num_models} '\
+        ' --prediction-type {params.prediction_type} '\
+        ' --output-file  {output.weight_file};'
+
+rule evaluate_maxima_arrays:
+    input:
+        data = os.path.join(
+            config['data_dir_pmc'], 
+            'maxima_arrays.npz',
+        ),
+        checkpoint_file = ancient(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'checkpoints',
+            'checkpoint_best.pt'
+        )),
+        training_done = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'training.done'
+        ),
+    output:
+        evaluation_done = touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'maxima_eval.done'
+        )),
+        evaluation_test = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'maxima_performance.csv'
+        )
+
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+        model_type = config['model_type'],
+        batch_size = config['batch_size'],
+        noise = config['noise'],
+        layer_sizes = config['layer_sizes'],
+        dropout = config['dropout'],
+        processes = config['processes'],
+        seed = config['train_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            wildcards.model_num,
+        ),
+
+    resources:
+        job_name = lambda wildcards: 'evalmax_' + str(wildcards.model_num),
+        time = '5-00:00:00',
+        mem_mb = '128G',
+        cpus = config['processes'],
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/evaluate_maxima_sim.py '\
+        ' --data-file {input.data} '\
+        ' --checkpoint-file {input.checkpoint_file} '\
+        ' --output-dir  {params.output_dir} '\ 
+        ' --prediction-type {params.prediction_type} '\
+        ' --batch-size  {params.batch_size} '\
+        ' --noise  {params.noise}' \
+        ' --layer-sizes  {params.layer_sizes} '\
+        ' --dropout  {params.dropout} '\
+        ' --processes {params.processes} '\
+        ' --seed {params.seed}; '
+
+
+
+rule temperature_calibrate:
+    input:
+        evaluation_vali = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'validation_performance.csv'
+        ),
+    output:
+        calibration_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'calibrated_temperature.npy'
+        ),
+        calibration_done = touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'temperature_calibration.done'
+        ))
+
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+
+    resources:
+        job_name = lambda wildcards: 'calibrate_' + str(wildcards.model_num),
+        time = '00:30:00',
+        mem_mb = '64G',
+        cpus = 2,
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' python3 -W ignore {SCRIPTS_DIR}/model_calibrate_temperature.py '\
+        ' --prediction-type {params.prediction_type} '\
+        ' --validation-file  {input.evaluation_vali} '\
+        ' --output-file  {output.calibration_file};'
+
+
+
+rule evaluate:
+    input:
+        data = os.path.join(
+            config['data_dir_heidelberg'], 
+            'dataset_'+str(config['methylation_threshold'])+'.npz',
+        ),
+        split_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            config['splits_file_name'],
+        ),
+        checkpoint_file = ancient(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'checkpoints',
+            'checkpoint_best.pt'
+        )),
+        training_done = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'training.done'
+        ),
+    output:
+        evaluation_done = touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'eval.done'
+        )),
+        evaluation_vali = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'validation_performance.csv'
+        ),
+        evaluation_test = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'test_performance.csv'
+        )
+
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+        model_type = config['model_type'],
+        batch_size = config['batch_size'],
+        noise = config['noise'],
+        model_num = lambda wildcards: wildcards.model_num,
+        layer_sizes = config['layer_sizes'],
+        dropout = config['dropout'],
+        bin_time = config['bin_time'],
+        min_time = config['min_time'],
+        max_time = config['max_time'],
+        processes = config['processes'],
+        seed = config['train_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            wildcards.model_num,
+        ),
+
+    resources:
+        job_name = lambda wildcards: 'eval_' + str(wildcards.model_num),
+        time = '5-00:00:00',
+        mem_mb = '64G',
+        cpus = config['processes'],
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/model_evaluate.py '\
+        ' --data-file {input.data} '\
+        ' --checkpoint-file {input.checkpoint_file} '\
+        ' --output-dir  {params.output_dir} '\ 
+        ' --prediction-type {params.prediction_type} '\
+        ' --model-type  {params.model_type} '\
+        ' --batch-size  {params.batch_size} '\
+        ' --noise  {params.noise}' \
+        ' --split-csv  {input.split_file} '\ 
+        ' --model-num {params.model_num} '\
+        ' --layer-sizes  {params.layer_sizes} '\
+        ' --dropout  {params.dropout} '\
+        ' --bin-time  {params.bin_time}' \
+        ' --min-time  {params.min_time}' \
+        ' --max-time  {params.max_time}' \
+        ' --processes {params.processes} '\
+        ' --seed {params.seed}; '
+
+rule train:
+    input:
+        data = os.path.join(
+            config['data_dir_heidelberg'], 
+            'dataset_'+str(config['methylation_threshold'])+'.npz',
+        ),
+        split_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            config['splits_file_name'],
+        ),
+    output:
+        training_done = touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'training.done'
+        )),
+        training_log = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'train.log'
+        ),
+        checkpoint_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            '{model_num}',
+            'checkpoints',
+            'checkpoint_best.pt'
+        ),
+
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+        model_type = config['model_type'],
+        adaptive_sampling = config['adaptive_sampling'],
+        adaptive_correction = config['adaptive_correction'],
+        adapt_every = config['adapt_every'],
+        batch_size = config['batch_size'],
+        noise = config['noise'],
+        bin_time = config['bin_time'],
+        min_time = config['min_time'],
+        max_time = config['max_time'],
+        model_num = lambda wildcards: wildcards.model_num,
+        layer_sizes = config['layer_sizes'],
+        dropout = config['dropout'],
+        num_epochs = config['num_epochs'],
+        cooldown_epochs = config['cooldown_epochs'],
+        start_lr = config["start_lr"],
+        final_lr = config["final_lr"],
+        weight_decay = config["weight_decay"],
+        warmup_steps = config["warmup_steps"],
+        checkpoint_every = config['checkpoint_every'],
+        validation_multiplier = config['validation_multiplier'],
+        max_checkpoints = config['max_checkpoints'],
+        checkpoint_metric = config['checkpoint_metric'],
+        checkpoint_metricdirection = config['checkpoint_metricdirection'],
+        processes = config['processes'],
+        seed = config['train_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            wildcards.model_num,
+        ),
+
+    resources:
+        job_name = lambda wildcards: 'train_' + str(wildcards.model_num),
+        time = '5-00:00:00',
+        mem_mb = '64G',
+        cpus = config['processes'],
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/model_train.py '\
+        ' --data-file {input.data} '\
+        ' --output-dir  {params.output_dir} '\ 
+        ' --prediction-type {params.prediction_type} '\
+        ' --model-type  {params.model_type} '\
+        ' --batch-size  {params.batch_size} '\
+        ' --adaptive-sampling  {params.adaptive_sampling} '\
+        ' --adaptive-correction  {params.adaptive_correction} '\
+        ' --adapt-every {params.adapt_every} '\
+        ' --noise  {params.noise}' \
+        ' --bin-time  {params.bin_time}' \
+        ' --min-time  {params.min_time}' \
+        ' --max-time  {params.max_time}' \
+        ' --split-csv  {input.split_file} '\ 
+        ' --model-num {params.model_num} '\
+        ' --layer-sizes  {params.layer_sizes} '\
+        ' --dropout  {params.dropout} '\
+        ' --num-epochs  {params.num_epochs} '\
+        ' --start-lr  {params.start_lr} '\
+        ' --final-lr  {params.final_lr} '\
+        ' --cooldown-epochs {params.cooldown_epochs} '\
+        ' --weight-decay  {params.weight_decay} '\
+        ' --warmup-steps  {params.warmup_steps} '\
+        ' --checkpoint-every  {params.checkpoint_every} '\
+        ' --validation-multiplier  {params.validation_multiplier} '\
+        ' --max-checkpoints  {params.max_checkpoints} '\
+        ' --checkpoint-metric  {params.checkpoint_metric} '\
+        ' --checkpoint-metricdirection  {params.checkpoint_metricdirection} '\
+        ' --processes {params.processes} '\
+        ' --seed {params.seed}; '
+
+rule split_cv:
+    input:
+        samples_file = os.path.join(
+            config['data_dir_heidelberg'], 
+            'train_samples.csv'
+        ),
+    
+    output:
+        split_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            config['splits_file_name']
+        ),
+        
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type, 
+        num_models = config['num_models'], 
+        num_splits = config['num_splits'], 
+        train_splits = config['train_splits'], 
+        validation_splits = config['validation_splits'], 
+        test_splits = config['test_splits'], 
+        seed = config['splits_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+        ),
+
+    resources:
+        job_name = 'split_cv',
+        time = '00:30:00',
+        mem_mb = '8G',
+        cpus = 1,
+        cpu_jobs = 1,
+        partition = 'cpu',
+        gpus = 0,
+        gpu_jobs = 0,
+
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; ' 
+        ' python3 {SCRIPTS_DIR}/model_splitcv.py '\
+        ' --samples-file {input.samples_file} '\
+        ' --output-file {output.split_file} '\
+        ' --prediction-type {params.prediction_type} '\
+        ' --num-models {params.num_models} '\
+        ' --num-splits {params.num_splits} '\
+        ' --train-splits {params.train_splits} '\
+        ' --validation-splits {params.validation_splits} '\
+        ' --test-splits {params.test_splits} '\
+        ' --seed {params.seed}; '
+

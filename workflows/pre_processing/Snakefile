@@ -1,0 +1,268 @@
+# To run: 
+# snakemake --profile slurm --resources cpu_jobs=6 -n
+# remove -n otherwise it is a dry run
+
+import os
+from snakemake.utils import min_version
+min_version('6.13.1')
+
+configfile:'../config.yaml'
+
+MINION_MAXIMA_NAMES = [f.split('_')[0] for f in os.listdir(config['data_dir_maxima_minion_megalodon'])]
+SCRIPTS_DIR = config['scripts_dir']
+ENV_DIR = "/hpc/compgen/users/mpages/deepsurg/denv"
+PROMETHION_MAXIMA_NAMES = list()
+for d in config['promethion_runs']:
+    for dd in os.listdir(os.path.join(config['data_dir_prom_runs'], d)):
+        if dd.startswith('barcode') and dd.endswith('prom'):
+            PROMETHION_MAXIMA_NAMES.append(d+'/'+dd)
+
+rule all:
+    input:
+        # os.path.join(config['data_dir_oslo'], 'merged_data.npz'),
+        # os.path.join(config['data_dir_oslo'], 'metadata.csv'),
+        # os.path.join(config['data_dir_heidelberg'], 'dataset_'+str(config['methylation_threshold'])+'.npz'),
+        # os.path.join(config['data_dir_heidelberg'], 'train_samples.csv'),
+        # expand(os.path.join(config['data_dir'], 'maxima', 'robustness', '{sample_name}', 'sim.done'), sample_name = MINION_MAXIMA_NAMES),
+        # expand(os.path.join(config['data_dir'], 'maxima', 'pseudotime', '{sample_name}', 'pseudotime.done'), sample_name = MINION_MAXIMA_NAMES),
+        # expand(os.path.join(config['data_dir'], 'brainstem_promethion', 'robustness', '{prom_sample_name}', 'pseudotime.done'), prom_sample_name = PROMETHION_MAXIMA_NAMES),
+        # expand(os.path.join(config['data_dir'], 'brainstem_promethion', 'pseudotime', '{prom_sample_name}', 'pseudotime.done'), prom_sample_name = PROMETHION_MAXIMA_NAMES),
+
+rule robustness_promethion_runs:
+    input:
+        mega_file = os.path.join(
+            config['data_dir_prom_runs'],
+            '{prom_sample_name}',
+            'per_read_modified_base_calls.txt',
+        )
+    output:
+        touch(os.path.join(
+            config['data_dir'],
+            'brainstem_promethion',
+            'robustness', 
+            '{prom_sample_name}', 
+            'pseudotime.done'
+        ))
+    params:
+        output_dir = lambda wildcards: os.path.join(
+            config['data_dir'],
+            'brainstem_promethion',
+            'robustness',
+            wildcards.prom_sample_name,
+        ),
+        num_simulations = 100,
+    resources:
+        job_name = 'robustness',
+        time = '12:00:00',
+        mem_mb = '64G',
+        cpus = 10,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/sim_real_runs_from_mega.py '\
+        ' --megalodon-file {input.mega_file} '\
+        ' --output-dir {params.output_dir} '\
+        ' --num-simulations {params.num_simulations} '\
+        ' --processes  {resources.cpus};'
+
+rule pseudotime_promethion_runs:
+    input:
+        mega_file = os.path.join(
+            config['data_dir_prom_runs'],
+            '{prom_sample_name}',
+            'per_read_modified_base_calls.txt',
+        )
+    output:
+        touch(os.path.join(
+            config['data_dir'],
+            'brainstem_promethion',
+            'pseudotime', 
+            '{prom_sample_name}', 
+            'pseudotime.done'
+        ))
+    params:
+        output_dir = lambda wildcards: os.path.join(
+            config['data_dir'],
+            'brainstem_promethion',
+            'pseudotime',
+            wildcards.prom_sample_name,
+        ),
+    resources:
+        job_name = 'pseudotime',
+        time = '00:30:00',
+        mem_mb = '32G',
+        cpus = 1,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/sim_real_runs_from_mega.py '\
+        ' --megalodon-file {input.mega_file} '\
+        ' --output-dir {params.output_dir} '\
+        ' --pseudotime '\
+        ' --processes  1;'
+
+rule simulate_nano_runs:
+    input:
+        mega_file = os.path.join(
+            config['data_dir_maxima_minion_megalodon'],
+            '{sample_name}' + '_per_read_modified_base_calls.txt',
+        )
+    output:
+        touch(os.path.join(
+            config['data_dir'],
+            'maxima',
+            'robustness', '{sample_name}', 'sim.done'
+        ))
+    params:
+        output_dir = lambda wildcards: os.path.join(
+            config['data_dir'],
+            'maxima',
+            'robustness',
+            wildcards.sample_name,
+        ),
+        num_simulations = 100,
+    resources:
+        job_name = 'sim',
+        time = '12:00:00',
+        mem_mb = '128G',
+        cpus = 5,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/sim_real_runs_from_mega.py '\
+        ' --megalodon-file {input.mega_file} '\
+        ' --output-dir {params.output_dir} '\
+        ' --num-simulations {params.num_simulations} '\
+        ' --processes  {resources.cpus};'
+
+rule pseudotime_nano_runs:
+    input:
+        mega_file = os.path.join(
+            config['data_dir_maxima_minion_megalodon'],
+            '{sample_name}' + '_per_read_modified_base_calls.txt',
+        )
+    output:
+        touch(os.path.join(
+            config['data_dir'],
+            'maxima',
+            'pseudotime', '{sample_name}', 'pseudotime.done'
+        ))
+    params:
+        output_dir = lambda wildcards: os.path.join(
+            config['data_dir'],
+            'maxima',
+            'pseudotime',
+            wildcards.sample_name,
+        ),
+    resources:
+        job_name = 'pseudotime',
+        time = '00:30:00',
+        mem_mb = '32G',
+        cpus = 1,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && source {ENV_DIR}/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore {SCRIPTS_DIR}/sim_real_runs_from_mega.py '\
+        ' --megalodon-file {input.mega_file} '\
+        ' --output-dir {params.output_dir} '\
+        ' --pseudotime '\
+        ' --processes  1;'
+
+rule process_oslo_merged_data:
+    input:
+        os.path.join(config['data_dir_oslo'], 'merged_data.tsv')
+    output:
+        os.path.join(config['data_dir_oslo'], 'merged_data.npz')
+    resources:
+        job_name = 'oslo_mergeddata',
+        time = '01:00:00',
+        mem_mb = '32G',
+        cpus = 1,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && PS1=dummy ' 
+        ' && . $(conda info --base)/etc/profile.d/conda.sh '
+        ' && conda activate pytorch '
+        ' && echo $CONDA_PREFIX; ' 
+        ' python3 /hpc/compgen/users/mpages/deepsurg/scripts/data_processing/parse_oslo_merged_data.py '\
+        ' --input-file {input} '\
+        ' --output-file {output}; '
+
+rule process_oslo_metadata:
+    input:
+        os.path.join(config['data_dir_oslo'], 'metadata_raw.txt')
+    output:
+        os.path.join(config['data_dir_oslo'], 'metadata.csv')
+    resources:
+        job_name = 'oslo_metadata',
+        time = '00:30:00',
+        mem_mb = '8G',
+        cpus = 1,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && PS1=dummy ' 
+        ' && . $(conda info --base)/etc/profile.d/conda.sh '
+        ' && conda activate pytorch '
+        ' && echo $CONDA_PREFIX; ' 
+        ' python3 /hpc/compgen/users/mpages/deepsurg/scripts/data_processing/parse_oslo_metadata.py '\
+        ' --metadata-file {input} '\
+        ' --output-file {output}; '
+
+rule binarize_train:
+    input:
+        data = os.path.join(config['data_dir_heidelberg'], 'train_data.txt'),
+        annotation = os.path.join(config['data_dir_heidelberg'], 'train_samples.csv')
+    output:
+        os.path.join(config['data_dir_heidelberg'], 'dataset_'+str(config['methylation_threshold'])+'.npz')
+    params:
+        threshold = config['methylation_threshold'],
+        probes_csv = config['probes_csv']
+    resources:
+        job_name = 'binarize_train',
+        time = '06:00:00',
+        mem_mb = '64G',
+        cpus = 1,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && PS1=dummy ' 
+        ' && . $(conda info --base)/etc/profile.d/conda.sh '
+        ' && conda activate pytorch '
+        ' && echo $CONDA_PREFIX; ' 
+        ' python3 /hpc/compgen/users/mpages/deepsurg/scripts/data_processing/binarize_train_data.py '\
+        ' --data-file {input.data} '\
+        ' --annotation-file {input.annotation} '\
+        ' --probes-csv {params.probes_csv} '\
+        ' --output-file {output} '\
+        ' --bin-threshold {params.threshold}; '
+
+rule annotate_train:
+    input:
+        os.path.join(config['data_dir_heidelberg'], 'train_annotation.txt')
+    output:
+        os.path.join(config['data_dir_heidelberg'], 'train_samples.csv')
+    resources:
+        job_name = 'annotate_train',
+        time = '00:30:00',
+        mem_mb = '8G',
+        cpus = 1,
+        cpu_jobs = 1,
+    shell:
+        ' set +eu '
+        ' && PS1=dummy ' 
+        ' && . $(conda info --base)/etc/profile.d/conda.sh '
+        ' && conda activate pytorch '
+        ' && echo $CONDA_PREFIX; ' 
+        ' python3 /hpc/compgen/users/mpages/deepsurg/scripts/data_processing/annotate_train_samples.py '\
+        ' --annotation-file {input} '\
+        ' --output-file {output}; '

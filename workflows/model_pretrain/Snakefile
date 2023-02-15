@@ -1,0 +1,378 @@
+# To run: 
+# snakemake --profile slurm --resources cpu_jobs=1 gpu_jobs=4 --latency-wait 60 -n
+# remove -n otherwise it is a dry run
+
+import os
+from snakemake.utils import min_version
+min_version('6.13.1')
+
+configfile:'../config.yaml'
+
+rule all:
+    input:
+        training_done = expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'pretrain',
+                '{model_num}',
+                'finetune',
+                'training.done'
+            ),
+            prediction_type = config['prediction_type'],
+            model_num = list(range(config['num_models']))[0]
+        ),  
+        eval_done = expand(
+            os.path.join(
+                config['model_dir'],
+                config['model_name'],
+                '{prediction_type}',
+                'pretrain',
+                '{model_num}',
+                'finetune',
+                'eval.done'
+            ),
+            prediction_type = config['prediction_type'],
+            model_num = list(range(config['num_models']))[0]
+        ),  
+
+rule evaluate:
+    input:
+        data = os.path.join(
+            config['data_dir_heidelberg'], 
+            'dataset_'+str(config['methylation_threshold'])+'.npz',
+        ),
+        split_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            config['splits_file_name'],
+        ),
+        checkpoint_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'pretrain',
+            '{model_num}',
+            'finetune',
+            'checkpoints',
+            'checkpoint_best.pt'
+        ),
+    output:
+        eval_done = touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'pretrain',
+            '{model_num}',
+            'finetune',
+            'eval.done'
+        )),  
+        evaluation_vali = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'pretrain',
+            '{model_num}',
+            'finetune',
+            'validation_performance.csv'
+        ),
+        evaluation_test = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'pretrain',
+            '{model_num}',
+            'finetune',
+            'test_performance.csv'
+        )
+
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+        model_type = config['model_type'],
+        batch_size = config['batch_size'],
+        noise = config['noise'],
+        model_num = lambda wildcards: wildcards.model_num,
+        layer_sizes = config['layer_sizes'],
+        dropout = config['dropout'],
+        processes = config['processes'],
+        seed = config['train_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'pretrain',
+            wildcards.model_num,
+            'finetune'
+        ),
+
+    resources:
+        job_name = lambda wildcards: 'eval_' + str(wildcards.model_num),
+        time = '1-00:00:00',
+        mem_mb = '128G',
+        cpus = config['processes'],
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source /hpc/compgen/users/mpages/deepsurg/venv/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore /hpc/compgen/users/mpages/deepsurg/scripts/model_test_online_sim.py '\
+        ' --data-file {input.data} '\
+        ' --checkpoint-file {input.checkpoint_file} '\
+        ' --output-dir  {params.output_dir} '\ 
+        ' --prediction-type {params.prediction_type} '\
+        ' --model-type  {params.model_type} '\
+        ' --batch-size  {params.batch_size} '\
+        ' --noise  {params.noise}' \
+        ' --split-csv  {input.split_file} '\ 
+        ' --model-num {params.model_num} '\
+        ' --layer-sizes  {params.layer_sizes} '\
+        ' --dropout  {params.dropout} '\
+        ' --processes {params.processes} '\
+        ' --seed {params.seed}; '
+
+rule train:
+    input:
+        data = os.path.join(
+            config['data_dir_heidelberg'], 
+            'dataset_'+str(config['methylation_threshold'])+'.npz',
+        ),
+        split_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            config['splits_file_name'],
+        ),
+        checkpoint_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'pretrain',
+            '{model_num}',
+            'checkpoints',
+            'checkpoint_best.pt'
+        ),
+    output:
+        training_done = touch(os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'pretrain',
+            '{model_num}',
+            'finetune',
+            'training.done'
+        )),
+        
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+        model_type = config['model_type'],
+        batch_size = config['ft_batch_size'],
+        noise = config['noise'],
+        model_num = lambda wildcards: wildcards.model_num,
+        layer_sizes = config['layer_sizes'],
+        dropout = config['dropout'],
+        num_epochs = config['ft_num_epochs'],
+        start_lr = config["ft_start_lr"],
+        final_lr = config["ft_final_lr"],
+        weight_decay = config["weight_decay"],
+        warmup_steps = config["ft_warmup_steps"],
+        validate_every = config['ft_validate_every'],
+        validate_multiplier = config['ft_validate_multiplier'],
+        max_checkpoints = config['max_checkpoints'],
+        checkpoint_metric = config['checkpoint_metric'],
+        checkpoint_metricdirection = config['checkpoint_metricdirection'],
+        processes = config['processes'],
+        seed = config['train_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'pretrain',
+            wildcards.model_num,
+            'finetune'
+        ),
+
+    resources:
+        job_name = lambda wildcards: 'train_' + str(wildcards.model_num),
+        time = '1-00:00:00',
+        mem_mb = '128G',
+        cpus = config['processes'],
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source /hpc/compgen/users/mpages/deepsurg/venv/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore /hpc/compgen/users/mpages/deepsurg/scripts/model_train_online_sim.py '\
+        ' --data-file {input.data} '\
+        ' --pretrain-checkpoint {input.checkpoint_file} '\
+        ' --output-dir  {params.output_dir} '\ 
+        ' --prediction-type {params.prediction_type} '\
+        ' --model-type  {params.model_type} '\
+        ' --batch-size  {params.batch_size} '\
+        ' --noise  {params.noise}' \
+        ' --split-csv  {input.split_file} '\ 
+        ' --model-num {params.model_num} '\
+        ' --layer-sizes  {params.layer_sizes} '\
+        ' --dropout  {params.dropout} '\
+        ' --num-epochs  {params.num_epochs} '\
+        ' --start-lr  {params.start_lr} '\
+        ' --final-lr  {params.final_lr} '\
+        ' --weight-decay  {params.weight_decay} '\
+        ' --warmup-steps  {params.warmup_steps} '\
+        ' --validate-every  {params.validate_every} '\
+        ' --validate-multiplier  {params.validate_multiplier} '\
+        ' --max-checkpoints  {params.max_checkpoints} '\
+        ' --checkpoint-metric  {params.checkpoint_metric} '\
+        ' --checkpoint-metricdirection  {params.checkpoint_metricdirection} '\
+        ' --processes {params.processes} '\
+        ' --seed {params.seed}; '
+
+rule pretrain:
+    input:
+        data = os.path.join(
+            config['data_dir_heidelberg'], 
+            'dataset_'+str(config['methylation_threshold'])+'.npz',
+        ),
+        split_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            config['splits_file_name'],
+        ),
+    output:
+        checkpoint_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            'pretrain',
+            '{model_num}',
+            'checkpoints',
+            'checkpoint_best.pt'
+        ),
+
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type,
+        model_type = config['pt_model_type'],
+        batch_size = config['batch_size'],
+        noise = config['noise'],
+        model_num = lambda wildcards: wildcards.model_num,
+        layer_sizes = config['layer_sizes'],
+        dropout = config['dropout'],
+        num_epochs = config['num_epochs'],
+        start_lr = config["start_lr"],
+        final_lr = config["final_lr"],
+        weight_decay = config["weight_decay"],
+        warmup_steps = config["warmup_steps"],
+        validate_every = config['validate_every'],
+        validate_multiplier = config['validate_multiplier'],
+        max_checkpoints = config['max_checkpoints'],
+        checkpoint_metric = config['pt_checkpoint_metric'],
+        checkpoint_metricdirection = config['pt_checkpoint_metricdirection'],
+        processes = config['processes'],
+        seed = config['train_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+            'pretrain',
+            wildcards.model_num
+        ),
+
+    resources:
+        job_name = lambda wildcards: 'pretrain_' + str(wildcards.model_num),
+        time = '1-00:00:00',
+        mem_mb = '128G',
+        cpus = config['processes'],
+        partition = 'gpu',
+        gpus = 'RTX6000:1',
+        gpu_jobs = 1
+
+    shell:
+        ' set +eu '
+        ' && source /hpc/compgen/users/mpages/deepsurg/venv/bin/activate; '  
+        ' mkdir -p {params.output_dir}; '
+        ' python3 -W ignore /hpc/compgen/users/mpages/deepsurg/scripts/model_train_online_sim.py '\
+        ' --data-file {input.data} '\
+        ' --output-dir  {params.output_dir} '\ 
+        ' --prediction-type {params.prediction_type} '\
+        ' --model-type  {params.model_type} '\
+        ' --batch-size  {params.batch_size} '\
+        ' --noise  {params.noise}' \
+        ' --split-csv  {input.split_file} '\ 
+        ' --model-num {params.model_num} '\
+        ' --layer-sizes  {params.layer_sizes} '\
+        ' --dropout  {params.dropout} '\
+        ' --num-epochs  {params.num_epochs} '\
+        ' --start-lr  {params.start_lr} '\
+        ' --final-lr  {params.final_lr} '\
+        ' --weight-decay  {params.weight_decay} '\
+        ' --warmup-steps  {params.warmup_steps} '\
+        ' --validate-every  {params.validate_every} '\
+        ' --validate-multiplier  {params.validate_multiplier} '\
+        ' --max-checkpoints  {params.max_checkpoints} '\
+        ' --checkpoint-metric  {params.checkpoint_metric} '\
+        ' --checkpoint-metricdirection  {params.checkpoint_metricdirection} '\
+        ' --processes {params.processes} '\
+        ' --seed {params.seed}; '
+
+rule split_cv:
+    input:
+        samples_file = os.path.join(
+            config['data_dir_heidelberg'], 
+            'train_samples.csv'
+        ),
+    
+    output:
+        split_file = os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            '{prediction_type}',
+            config['splits_file_name']
+        ),
+        
+    params:
+        prediction_type = lambda wildcards: wildcards.prediction_type, 
+        num_models = config['num_models'], 
+        num_splits = config['num_splits'], 
+        train_splits = config['train_splits'], 
+        validation_splits = config['validation_splits'], 
+        test_splits = config['test_splits'], 
+        seed = config['splits_seed'],
+        output_dir = lambda wildcards: os.path.join(
+            config['model_dir'],
+            config['model_name'],
+            wildcards.prediction_type,
+        ),
+
+    resources:
+        job_name = 'split_cv',
+        time = '00:30:00',
+        mem_mb = '8G',
+        cpus = 1,
+        cpu_jobs = 1,
+        partition = 'cpu',
+        gpus = 0,
+        gpu_jobs = 0,
+
+    shell:
+        ' set +eu '
+        ' && source /hpc/compgen/users/mpages/deepsurg/venv/bin/activate; '  
+        ' mkdir -p {params.output_dir}; ' 
+        ' python3 /hpc/compgen/users/mpages/deepsurg/scripts/model_splitcv.py '\
+        ' --samples-file {input.samples_file} '\
+        ' --output-file {output.split_file} '\
+        ' --prediction-type {params.prediction_type} '\
+        ' --num-models {params.num_models} '\
+        ' --num-splits {params.num_splits} '\
+        ' --train-splits {params.train_splits} '\
+        ' --validation-splits {params.validation_splits} '\
+        ' --test-splits {params.test_splits} '\
+        ' --seed {params.seed}; '
+

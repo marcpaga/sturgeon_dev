@@ -1,0 +1,92 @@
+########################## PATHS ###############################################
+scripts_dir:  "/hpc/compgen/users/mpages/sturgeon_dev/scripts"
+env_dir: "/hpc/compgen/users/mpages/sturgeon_dev/venv" #should end with the venv
+
+########################## DATA ################################################
+data_dir: "/hpc/compgen/projects/asmethylation/asmethylation/analysis/mpages/data"
+
+# Heidelberg data
+data_dir_heidelberg: "/hpc/compgen/projects/asmethylation/asmethylation/analysis/mpages/data/heidelberg_cohort"
+download_links_heidelberg: [
+  "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE90nnn/GSE90496/suppl/GSE90496_beta.txt.gz",
+  "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE90nnn/GSE90496/matrix/GSE90496_series_matrix.txt.gz",
+  "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE109nnn/GSE109379/suppl/GSE109379_processed_data.txt.gz",
+  "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE109nnn/GSE109379/matrix/GSE109379_series_matrix.txt.gz",
+]
+
+# Oslo data
+data_dir_oslo: "/hpc/compgen/projects/asmethylation/asmethylation/analysis/mpages/data/GSE209865"
+metadata_download_link: "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE209nnn/GSE209865/soft/GSE209865_family.soft.gz"
+merged_data_download_link: "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE209nnn/GSE209865/suppl/GSE209865_methylation_merged_samples.tsv.gz"
+
+# PMC data
+data_dir_pmc: "/hpc/compgen/projects/asmethylation/asmethylation/analysis/mpages/data/maxima"
+data_dir_maxima_minion_megalodon: "/hpc/compgen/projects/asmethylation/gw_profiles/analysis/cvermeulen/minion_megalodon_outputs"
+data_dir_maxima_brainstem: "/hpc/compgen/projects/asmethylation/asmethylation/analysis/mpages/data/brainstem_promethion"
+data_dir_prom_runs: "/hpc/compgen/projects/asmethylation/gw_profiles/analysis/cvermeulen"
+promethion_runs: [
+  'promethion_1_VER8076',
+  'promethion_2_VER8108',
+  'promethion_3_VER8109',
+]
+methylation_threshold: 0.6
+
+####################### CV #####################################################
+# crossvalidation splits
+probes_csv: '/hpc/compgen/users/mpages/deepsurg/data/probes.csv'
+splits_file_name: "splits.csv"
+num_models: 4
+num_splits: 4
+train_splits: 2
+validation_splits: 1
+test_splits: 1
+splits_seed: 1
+
+
+############################ MODEL TRAINING ####################################
+
+# training
+model_dir: '/hpc/compgen/projects/asmethylation/asmethylation/analysis/mpages/models'
+prediction_type: ['diagnostics'] #['cerebellum_fourthvent_toplevel', 'diagnostics', 'surgery']
+model_name: 'ce.256.128.adaptive.fast'
+num_models_run: 4
+
+# PRETRAINING PARAMETERS
+pt_checkpoint_metric: 'metric.autoencoder_accuracy'
+pt_checkpoint_metricdirection: 'max'
+pt_model_type: "autoencoder"
+
+# TRAINING PARAMETERS
+batch_size: 64
+noise: 0.1
+adaptive_sampling: True
+adaptive_correction: 0.3
+adapt_every: 1
+bin_time: 300
+min_time: 0
+max_time: 12
+model_type: ['ce'] #['triplet', 'ce', 'double']
+layer_sizes: [256, 128]
+dropout: 0.5
+num_epochs: 1000
+cooldown_epochs: 0
+start_lr: 0.001
+final_lr: 0.00001
+weight_decay: 0.0005
+warmup_steps: 2000
+processes: 32
+checkpoint_every: 500
+validation_multiplier: 25
+max_checkpoints: 1
+checkpoint_metric: 'metric.balanced_accuracy'
+checkpoint_metricdirection: 'max'
+train_seed: 0
+
+# TRAINING_PARAMETERS FROM PRETRAINING
+ft_batch_size: 64
+ft_num_epochs: 500
+ft_validate_every: 500
+ft_validate_multiplier: 25
+ft_start_lr: 0.0001
+ft_final_lr: 0.00001
+ft_warmup_steps: 1

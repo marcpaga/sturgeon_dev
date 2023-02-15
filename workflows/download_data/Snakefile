@@ -1,0 +1,89 @@
+# To run: 
+# snakemake -c1 -n
+# remove -n otherwise it is a dry run
+
+
+import os
+from snakemake.utils import min_version
+min_version('6.13.1')
+
+configfile:'../config.yaml'
+
+rule all:
+    input:
+        os.path.join(config['data_dir_heidelberg'], 'train_data.txt'),
+        os.path.join(config['data_dir_heidelberg'], 'train_annotation.txt'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_data.txt'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_annotation.txt'),
+        os.path.join(config['data_dir_oslo'], 'metadata_raw.txt'),
+        os.path.join(config['data_dir_oslo'], 'merged_data.tsv')
+
+rule uncompress_heidelberg_data:
+    input: 
+        os.path.join(config['data_dir_heidelberg'], 'train_data.txt.gz'),
+        os.path.join(config['data_dir_heidelberg'], 'train_annotation.txt.gz'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_data.txt.gz'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_annotation.txt.gz'),
+    output:
+        os.path.join(config['data_dir_heidelberg'], 'train_data.txt'),
+        os.path.join(config['data_dir_heidelberg'], 'train_annotation.txt'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_data.txt'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_annotation.txt'),
+    threads:1
+    run:
+        for inputfile in input:
+            shell('gzip -d {inputfile}')
+
+rule uncompress_oslo_merged_data:
+    input:
+        os.path.join(config['data_dir_oslo'], 'merged_data.tsv.gz')
+    output:
+        os.path.join(config['data_dir_oslo'], 'merged_data.tsv')
+    threads:1
+    run:
+        shell('gzip -d {input}')
+
+rule uncompress_oslo_metadata:
+    input:
+        os.path.join(config['data_dir_oslo'], 'metadata_raw.txt.gz')
+    output:
+        os.path.join(config['data_dir_oslo'], 'metadata_raw.txt')
+    threads:1
+    run:
+        shell('gzip -d {input}')
+
+rule download_heidelberg_data:
+    output:
+        os.path.join(config['data_dir_heidelberg'], 'train_data.txt.gz'),
+        os.path.join(config['data_dir_heidelberg'], 'train_annotation.txt.gz'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_data.txt.gz'),
+        os.path.join(config['data_dir_heidelberg'], 'validation_annotation.txt.gz'),
+    params:
+        download_links = config['download_links_heidelberg'],
+    threads:1
+    run:
+        for link, outputfile in zip(params.download_links, output):
+            shell('wget {link} -O {outputfile}')
+
+
+rule download_merged_oslo_data:
+    output:
+        os.path.join(config['data_dir_oslo'], 'merged_data.tsv.gz')
+    params:
+        download_link = config['merged_data_download_link']
+    threads:1
+    run:
+        shell('wget {params.download_link} -O {output}')
+
+rule download_oslo_metadata:
+    output:
+        os.path.join(config['data_dir_oslo'], 'metadata_raw.txt.gz')
+    params:
+        download_link = config['metadata_download_link']
+    threads:1
+    run:
+        shell('wget {params.download_link} -O {output}')
+
+
+
+

@@ -1,0 +1,97 @@
+PMCBM;classifier 11 result;classifier 11 score;Klassieke casus;class interpretation v11;v11_codes;v11_sure;class interpretation;patho_codes;patho_sure
+PMLBM000CXW;geen diagnose;0,3;exotische casus;U;None;Yes;GBM ?;Glioblastoma - GBM;No
+PMLBM000FZT;geen diagnose;0,3;exotische casus;U;None;Yes;U;None;Yes
+PMLBM000GGK;control tissue;0,98;exotische casus;U;Control - CONTR;Yes;U;None;Yes
+PMLBM000BSU;geen diagnose;0,3;exotische casus;U;None;Yes;LGG DNT or HGNETs?;Other glioma - HGNET - MN1;No
+PMLBM000CBB;geen diagnose;0,3;exotische casus;U;None;Yes;U;None;Yes
+PMLBM000CMH;geen diagnose;0,3;exotische casus;U;None;Yes;HGNET ?;Other glioma - HGNET - MN1;No
+PMLBM000AWR;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID);Other glioma - LGG PA;Yes
+PMLBM000AXD;geen diagnose (diffuse leptomeningeale glioneuronale tumor);0,59;klassiek;U;None;Yes;LGG DIG/DIA?;Glio-neuronal - LGG - DIG/DIA;No
+PMLBM000AYA;pilocytair astrocytoom;0,96;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID);Other glioma - LGG PA;Yes
+PMLBM000AYR; laaggradig glioom, MYB/MYBL1;0,99;klassiek;LGG MYB;Other glioma - LGG MYB - MYB;Yes;LGG MYB;Other glioma - LGG MYB - MYB;Yes
+PMLBM000BTI;ependymoom, posterior fossa groep A;0,99;klassiek;EPN PF A;Ependymal - EPN - PF A;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000BUD;pilocytair astrocytoom;0,98;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID);Other glioma - LGG PA;Yes
+PMLBM000BUL;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID);Other glioma - LGG PA;Yes
+PMLBM000BWA;pilocytair astrocytoom;0,98;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID);Other glioma - LGG PA;Yes
+PMLBM000BXT;ependymoom, posterior fossa group A;0,99;klassiek;EPN PF A;Ependymal - EPN - PF A;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000BXW;ependymoom, posterior fossa groep A ;0,99;klassiek;EPN PF A;Ependymal - EPN - PF A;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000BYI;geen diagnose (edulloblastoma non-WNT/non-SHH, groep 3);0,76;klassiek;U;None;Yes;MB, G3;Embryonal - MB G3G4 - G3;Yes
+PMLBM000BZO;geen diagnose (edulloblastoma non-WNT/non-SHH, groep 3);0,99;klassiek;MB, G3;Embryonal - MB G3G4 - G3;Yes;MB, G3;Embryonal - MB G3G4 - G3;Yes
+PMLBM000CAP;low grade glioma, MYB/MYBL1;0,99;klassiek;LGG MYB;Other glioma - LGG MYB - MYB;Yes;U;None;Yes
+PMLBM000CDD;medulloblastoma, SHH;0,97;klassiek;MB SHH CH/AD or MB SHH INF;Embryonal - MB SHH;Yes;MB SHH CH/AD or MB SHH INF;Embryonal - MB SHH;Yes
+PMLBM000CDJ;geen diagnose (glioma, IDH mutant);0,61;klassiek;U;None;Yes;A IDH;Glioma IDH - A IDH - A IDH;Yes
+PMLBM000CFV;geen diagnose (pleomorphic xanthoastrocytoma);0,87;klassiek;PXA;Other glioma - PXA - PXA;Yes;PXA;Other glioma - PXA - PXA;Yes
+PMLBM000CGN;ependymoma, posterior fossa group A;0,99;klassiek;EPN PF A;Ependymal - EPN - PF A;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000CHK;Glioma, IDH mutant ;0,97;klassiek;A IDH HG;Glioma IDH - A IDH - HG;Yes;A IDH HG ?;Glioma IDH - A IDH - HG;No
+PMLBM000CJN;pilocytair astrocytoom;0,98;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID);Other glioma - LGG PA;Yes
+PMLBM000CKG;ependymoma, posterior fossa group A;0,98;klassiek;EPN PF A;Ependymal - EPN - PF A;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000CLE;geen diagnose (meningioma);0,63;klassiek;U;None;Yes;MNG;Mesenchymal - MNG - MNG;Yes
+PMLBM000CLV;Glioblastoma, IDH wildtype (subtype midline);0,99;klassiek;GBM IDH WT;Glioblastoma - GBM;No;GBM RTK?;Glioblastoma - GBM - RTK;No
+PMLBM000CMJ;pilocytair astrocytoom;0,84;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000CMY;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000CNM;anaplastic pilocytic astrocytoma;0,95;klassiek;ANA PA;Other glioma - ANA PA - ANA PA;Yes;U;None;Yes
+PMLBM000COZ;geen diagnose (pilocytair astrocytoom);0,79;klassiek;U;None;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000CPZ;geen diagnose (ependymoma, posterior fossa group A);0,76;klassiek;U;None;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000CQX;Ependymoma, myxopapillary;0,99;klassiek;EPN MPE;Ependymal - EPN - MPE;Yes;EPN MPE;Ependymal - EPN - MPE;Yes
+PMLBM000CRH;geen diagnose (pilocytair astrocytoom);0,6;klassiek;U;None;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000CTP;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000CVF;ependymoma, posterior fossa group A;0,99;klassiek;EPN PF A;Ependymal - EPN - PF A;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000CZF;pilocytair astrocytoom;0,96;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DAM;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DBZ;Diffuse midline glioma H3 K27M mutant ;0,99;klassiek;DMG K27;Glioblastoma - DMG - K27;Yes;DMG K27;Glioblastoma - DMG - K27;Yes
+PMLBM000DCH;Medulloblastoma non-WNT/non-SHH (group 4);0,99;klassiek;MB G4;Embryonal - MB G3G4 - G4;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000DCJ;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DDI;infantile hemispheric glioma;0,9;klassiek;U;None;Yes;U;None;Yes
+PMLBM000DEY;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DFT;ependymoma, posterior fossa group A;0,99;klassiek;EPN PF A;Ependymal - EPN - PF A;Yes;EPN PF A;Ependymal - EPN - PF A;Yes
+PMLBM000DLT;Medulloblastoma non-WNT/non-SHH (group 3);0,99;klassiek;MB G3;Embryonal - MB G3G4 - G3;Yes;MB G3;Embryonal - MB G3G4 - G3;Yes
+PMLBM000DMH;diffuse midline glioma H3 K27M mutant ;0,99;klassiek;DMG K27;Glioblastoma - DMG - K27;Yes;DMG K27;Glioblastoma - DMG - K27;Yes
+PMLBM000DOJ;diffuse midline glioma H3 K27M mutant ;0,99;klassiek;DMG K27;Glioblastoma - DMG - K27;Yes;DMG K27;Glioblastoma - DMG - K27;Yes
+PMLBM000DQN;pilocytair astrocytoom;0,99;klassiek;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DSG;Medulloblastoma non-WNT/non-SHH (group 4);0,99;klassiek;MB G4;Embryonal - MB G3G4 - G4;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000DWL;diffuse leptomeningeal glioneuronal tumor;1;klassiek;DLGNT;Glio-neuronal - DLGNT - DLGNT;Yes;DLGNT;Glio-neuronal - DLGNT - DLGNT;Yes
+PMLBM000DWV;geen diagnose;0,3;klassiek;U;None;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DXH;pilocytair astrocytoom;0,98;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DXQ;medulloblastoma, SHH;0,98;klassiek;MB SHH CH/AD or MB SHH INF;Embryonal - MB SHH;Yes;MB SHH CH/AD or MB SHH INF;Embryonal - MB SHH;Yes
+PMLBM000DXU;pilocytair astrocytoom;0,95;klassiek;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000DXX;Medulloblastoma non-WNT/non-SHH (group 4);1;klassiek;MB G4;Embryonal - MB G3G4 - G4;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000FGZ; infantile hemispheric glioma;0,99;klassiek;IHG;Other glioma - IHG - IHG;Yes;IHG;Other glioma - IHG - IHG;Yes
+PMLBM000FHD;pilocytair astrocytoom;0,99;klassiek;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FHN;geen diagnose (pilocytair astrocytoom);0,36;klassiek;U;None;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FHW;Glioblastoma, IDH wildtype;1;klassiek;GBM IDH WT;Glioblastoma - GBM;No;U;None;Yes
+PMLBM000FIG;pilocytair astrocytoom;0,94;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FKK;pilocytair astrocytoom (v12.5);0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FLP;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FME;schwannoma (sarcoma classifier v12.2);1;klassiek;SCHW;Nerve - SCHW ;Yes;SCHW;Nerve - SCHW ;Yes
+PMLBM000FMS;Medulloblastoma non-WNT/non-SHH (group 4);0,99;klassiek;MB G4;Embryonal - MB G3G4 - G4;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000FNA;geen diagnose (diffuse midline glioma H3 K27M mutant);0,83;klassiek;DMG K27;Glioblastoma - DMG - K27;Yes;DMG K27;Glioblastoma - DMG - K27;Yes
+PMLBM000FOH;Medulloblastoma non-WNT/non-SHH (group 4);1;klassiek;MB G4;Embryonal - MB G3G4 - G4;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000FPE;pilocytair astrocytoom;0,97;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FPY;ependymoma, RELA fusion ;1;klassiek;EPN RELA;Ependymal - EPN - RELA;Yes;EPN RELA;Ependymal - EPN - RELA;Yes
+PMLBM000FQH;geen diagnose (pilocytair astrocytoom);0,72;klassiek;U;None;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FRM;geen diagnose (pilocytair astrocytoom);0,82;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FRR;diffuse midline glioma H3 K27M mutant ;0,95;klassiek;DMG K27;Glioblastoma - DMG - K27;Yes;DMG K27;Glioblastoma - DMG - K27;Yes
+PMLBM000FRX;geen diagnose (control tissue);0,46;klassiek;U;None;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FSF;geen diagnose (pilocytair astrocytoom);0,77;klassiek;U;None;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FSO;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FTP;pilocytair astrocytoom;1;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FUG;pilocytair astrocytoom;0,99;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FWA;Medulloblastoma non-WNT/non-SHH (group 4);0,99;klassiek;MB G4;Embryonal - MB G3G4 - G4;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000FWS;meningioma ;0,93;klassiek;MNG;Mesenchymal - MNG - MNG;Yes;LGG GG;Glio-neuronal - LGG - GG;Yes
+PMLBM000FXH;Medulloblastoma non-WNT/non-SHH (group 3);1;klassiek;MB G3;Embryonal - MB G3G4 - G3;Yes;MB G3;Embryonal - MB G3G4 - G3;Yes
+PMLBM000FXV;diffuse midline glioma H3 K27M mutant ;1;klassiek;DMG K27;Glioblastoma - DMG - K27;Yes;DMG K27;Glioblastoma - DMG - K27;Yes
+PMLBM000FYD;diffuse midline glioma H3 K27M mutant ;0,97;klassiek;DMG K27;Glioblastoma - DMG - K27;Yes;DMG K27;Glioblastoma - DMG - K27;Yes
+PMLBM000GCK;pilocytair astrocytoom;0,94;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000GEK;ependymoma, RELA fusion;0,99;klassiek;EPN RELA;Ependymal - EPN - RELA;Yes;EPN ??;Ependymal - EPN;No
+PMLBM000GFS;pilocytair astrocytoom;0,97;klassiek;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000GGU;medulloblastoma, WNT;1;klassiek;MB WNT;Embryonal - MB WNT - WNT;Yes;MB WNT;Embryonal - MB WNT - WNT;Yes
+PMLBM000GJD;Medulloblastoma non-WNT/non-SHH (group 4);0,99;klassiek;MB G4;Embryonal - MB G3G4 - G4;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000CJZ;geen diagnose (pilocytair astrocytoom);0,72;lastige casus;U;None;Yes;LGG PA (PF/MID);Other glioma - LGG PA;Yes
+PMLBM000DBN;geen diagnose;0,3;lastige casus;U;None;Yes;U;None;Yes
+PMLBM000DIV;geen diagnose (pilocytair astrocytoom);0,63;lastige casus;U;None;Yes;U;None;Yes
+PMLBM000DMM;geen diagnose (pilocytic astrocytoma);0,63;lastige casus;U;None;Yes;U;None;Yes
+PMLBM000DUP;geen diagnose (pilocytair astrocytoom);0,84;lastige casus;Pilocytic Astrocytoma;Other glioma - LGG PA;Yes;LGG PA (PF/MID), LGG PA/GG ST;Other glioma - LGG PA;Yes
+PMLBM000FMI;geen diagnose (pineal parenchymal tumor);0,36;lastige casus;U;None;Yes;MB G4;Embryonal - MB G3G4 - G4;Yes
+PMLBM000FWG;geen diagnose;0,3;lastige casus;U;None;Yes;?;None;Yes
+PMLBM000GHX;meningioma ;1;lastige casus;MNG;Mesenchymal - MNG - MNG;Yes;MNG;Mesenchymal - MNG - MNG;Yes
+PMLBM000FZB;Unknown;0,3;Unknown;U;None;Yes;U;None;Yes
