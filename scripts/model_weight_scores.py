@@ -9,7 +9,6 @@ import argparse
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 import torch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -36,7 +35,7 @@ if __name__ == '__main__':
 
     print('Reading test performance files')
     test_df = list()
-    for model_num in tqdm(range(args.num_models)):
+    for model_num in range(args.num_models):
         df = pd.read_csv(os.path.join(args.model_dir, str(model_num), 'test_performance.csv'), header = 0, index_col = None)
         df['Model'] = model_num
         test_df.append(df)
