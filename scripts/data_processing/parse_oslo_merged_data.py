@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm import tqdm
 import argparse
 
 if __name__ == "__main__":
@@ -14,7 +13,7 @@ if __name__ == "__main__":
 
     sample_names = list()
     with open(tsv_file, 'r') as handle:
-        for i, line in tqdm(enumerate(handle), total = 416):
+        for i, line in enumerate(handle):
             line = line.strip('\n').split(',')
             if i == 0:
                 probes = line[1:]
