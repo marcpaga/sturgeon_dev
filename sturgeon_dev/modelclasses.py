@@ -9,7 +9,6 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from sklearn.metrics import balanced_accuracy_score
-from tqdm import tqdm
 import psutil
 
 from sturgeon_dev.utils import generate_log_df, clean_checkpoints
@@ -305,7 +304,7 @@ class BaseModel(nn.Module):
             
             st_time = time.time()
             # iterate over the train data
-            for _, train_batch in tqdm(enumerate(dataloaders['train']), total = len(dataloaders['train']), disable = not progress_bar):
+            for _, train_batch in enumerate(dataloaders['train']):
                 
                 if logger:
                     mem_mb = psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2
@@ -440,11 +439,8 @@ class BaseModel(nn.Module):
             num_workers = processes,
         )
 
-        for batch_num, batch in tqdm(
-            enumerate(dataloader), 
-            total = int(len(self.dataset.samplers[cvset])/batch_size), 
-            disable = not progress_bar
-        ):
+        for batch_num, batch in enumerate(dataloader):
+
             if logger:
                 logger.info('Testing step number: ' + str(batch_num))
 
@@ -484,91 +480,6 @@ class BaseModel(nn.Module):
                 results.to_csv(output_file, mode='a', header = False, index = False)
             else:
                 results.to_csv(output_file, mode='w', header = True, index = False)
-
-
-    # def test_targeted(
-    #     self,
-    #     batch_size,
-    #     decoding_dict,
-    #     output_file,
-    #     processes,
-    #     progress_bar,
-    # ):
-
-
-    #     dataloader = DataLoader(
-    #         dataset = self.dataset,
-    #         batch_size = batch_size,
-    #         sampler = self.dataset.samplers['train'], 
-    #         num_workers = processes,
-    #     )
-
-    #     for train_batch in tqdm(
-    #         dataloader, 
-    #         total = int(len(self.dataset.samplers['train'])/batch_size), 
-    #         disable = not progress_bar
-    #     ):
-    #         _, _ = self.train_step(train_batch)
-
-    #     dataloader = DataLoader(
-    #         dataset = self.dataset,
-    #         batch_size = batch_size,
-    #         sampler = self.dataset.samplers['test'], 
-    #         num_workers = processes,
-    #     )
-
-    #     for test_batch in tqdm(
-    #         dataloader, 
-    #         total = int(len(self.dataset.samplers['test'])/batch_size), 
-    #         disable = not progress_bar
-    #     ):
-    #         predictions = self.predict_step(test_batch)
-
-    #         results = {
-    #             "Idx": list(),
-    #             "Diagnostics_label": list(),
-    #             "Label": list(),
-    #             "Timepoint": list(),
-    #             "Seed_pregen": list(),
-    #             "NSites": list(),
-    #         }
-    #         for v in decoding_dict.values():
-    #             results[v] = list()
-            
-    #         results['Idx'].append(train_batch['idx'].cpu().numpy().flatten())
-    #         for y in train_batch['diagnostics'].cpu().numpy():
-    #             results['Diagnostics_label'].append(DIAGNOSTICS_DECODING[y])
-    #         for y in train_batch['y'].cpu().numpy():
-    #             results['Label'].append(decoding_dict[y])
-    #         results['Timepoint'].append(train_batch['timepoint'].cpu().numpy())
-    #         results['Seed_pregen'].append(train_batch['seed_pregen'].cpu().numpy())
-    #         results['NSites'].append(torch.sum(train_batch['x'] != 0, 1).cpu().numpy())
-
-    #         for i in range(predictions.shape[1]):
-    #             results[decoding_dict[i]].append(predictions[:, i].exp().cpu().numpy())
-
-    #         for k, v in results.items():
-    #             try:
-    #                 results[k] = np.concatenate(v)
-    #             except ValueError:
-    #                 results[k] = np.array(v)
-
-    #         results = pd.DataFrame(results)
-    #         if os.path.isfile(output_file):
-    #             results.to_csv(output_file, mode='a', header = False, index = False)
-    #         else:
-    #             results.to_csv(output_file, mode='w', header = True, index = False)
-
-
-    # def predict_targeted(
-    #     self,
-    #     batch_size,
-    #     processes,
-    #     progress_bar,
-    # ):
-    #     raise NotImplementedError
-
-
 
 
 class EnsembleModel(nn.Module):
