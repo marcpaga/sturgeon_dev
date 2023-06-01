@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 import argparse
 
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     measurements = list()
 
     with open(args.data_file, 'r') as f:
-        for linenum, line in tqdm(enumerate(f)):
+        for linenum, line in enumerate(f):
             if linenum == 0:
                 header = np.array(line.strip('\n').split('\t'))
                 probe_col = 0
